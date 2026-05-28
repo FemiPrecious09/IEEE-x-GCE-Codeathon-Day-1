@@ -23,7 +23,7 @@ paths:
     get:
       tags: [notes]
       summary: List notes
-      description: 
+      description: |
         Returns a paginated list of notes. Optionally sorted by title,
         creation date, or last update. Empty result sets return `200 OK`
         with an empty array.

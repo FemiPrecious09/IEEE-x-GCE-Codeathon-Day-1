@@ -1,158 +1,439 @@
-Notes API
-A RESTful CRUD API for managing notes, built with Node.js and Express.
-Submitted for Day 1 of the IEEE × GitHub Campus Experts Codeathon — Backend Track. Focus: HTTP fundamentals, clean REST design, semantic status codes, and defensive engineering.
+# Notes API ── Day 1
 
-Features
+A RESTful CRUD API for managing notes, built with **Node.js** and **Express**.
 
-Full CRUD operations on notes (POST, GET, PUT, PATCH, DELETE)
-In-memory storage seeded with sample data
-Semantic HTTP status codes (200, 201, 204, 400, 404, 500)
-Pagination and sorting on the list endpoint
-Custom request-logging middleware
-Global 404 route handler and centralized error handler
-Clean modular layout (routes / controllers / data)
+Built for the IEEE × GitHub Campus Experts Codeathon — Backend Track.
 
+Focus areas for Day 1:
 
-Tech Stack
+* HTTP fundamentals
+* Clean REST API design
+* Semantic status codes
+* Defensive backend engineering
 
-Node.js (v18+)
-Express — HTTP routing and middleware
-dotenv — environment variable loading
-crypto — UUID generation (Node built-in)
+---
 
+# Overview
 
-Project Structure
+This project implements a complete Notes API with:
+
+* CRUD operations
+* Pagination and sorting
+* Modular Express architecture
+* Request logging
+* Centralized error handling
+* Semantic HTTP responses
+
+Data is currently stored in-memory and seeded on server startup.
+
+---
+
+# Features
+
+## Core Features
+
+* Create notes
+* Read all notes
+* Read a single note
+* Replace notes with PUT
+* Partially update notes with PATCH
+* Delete notes
+
+## Engineering Features
+
+* Semantic HTTP status codes
+* Pagination and sorting
+* Request logging middleware
+* Centralized error handling
+* Global 404 route handler
+* Modular folder structure
+
+---
+
+# Tech Stack
+
+| Technology     | Purpose                         |
+| -------------- | ------------------------------- |
+| Node.js (v18+) | JavaScript runtime              |
+| Express.js     | HTTP routing and middleware     |
+| dotenv         | Environment variable management |
+| crypto         | UUID generation                 |
+
+---
+
+# Project Structure
+
+```txt id="my7gx4"
 .
 ├── controllers/
-│   └── notes_controller.js   # Route handler logic
+│   └── notes_controller.js
+│
 ├── routes/
-│   └── notes.js              # Express router for /notes
+│   └── notes.js
+│
 ├── db/
-│   └── database.js           # In-memory notes array (seeded)
-├── server.js                 # App entry point + global middleware
-├── .env                      # Environment variables (not committed)
-├── .env.example              # Template for env vars
+│   └── database.js
+│
+├── server.js
+├── .env
+├── .env.example
 ├── package.json
 └── README.md
+```
 
-Setup
-1. Clone the repo
-bashgit clone <your-repo-url>
+---
+
+# Quick Start
+
+## 1. Clone the Repository
+
+```bash id="7t9qdw"
+git clone <your-repo-url>
 cd <repo-folder>
-2. Install dependencies
-bashnpm install
-3. Configure environment variables
-Create a .env file in the project root:
-envACTIVE_PORT=3500
-4. Start the server
-bashnode server.js
-You should see:
-Server is ACTIVE🔥🔥 on http://localhost:3500
+```
 
-API Endpoints
-Base URL: http://localhost:3500
-POST /notes — Create a note
-Creates a new note with a server-generated id and timestamps.
-Request body:
-json{
+---
+
+## 2. Install Dependencies
+
+```bash id="o1e7cx"
+npm install
+```
+
+---
+
+## 3. Configure Environment Variables
+
+Create a `.env` file:
+
+```env id="d9j6gl"
+ACTIVE_PORT=8800
+```
+
+---
+
+## 4. Start the Server
+
+```bash id="0d0r8x"
+node server.js
+```
+
+Expected output:
+
+```txt id="uxh7n8"
+Server is ACTIVE🔥🔥 on http://localhost:8800
+```
+
+---
+
+# API Base URL
+
+```txt id="f3pxwe"
+http://localhost:8800
+```
+
+---
+
+# API Endpoints
+
+| Method | Endpoint     | Description     | Success |
+| ------ | ------------ | --------------- | ------- |
+| POST   | `/notes`     | Create note     | 201     |
+| GET    | `/notes`     | Get all notes   | 200     |
+| GET    | `/notes/:id` | Get single note | 200     |
+| PUT    | `/notes/:id` | Replace note    | 200     |
+| PATCH  | `/notes/:id` | Partial update  | 200     |
+| DELETE | `/notes/:id` | Delete note     | 204     |
+
+---
+
+# Create Note
+
+## `POST /notes`
+
+Creates a new note with server-generated identifiers and timestamps.
+
+### Request Body
+
+```json id="8jryy7"
+{
   "title": "Buy milk",
   "body": "2% from the corner store"
 }
-Response — 201 Created
-json{
+```
+
+---
+
+### Response — `201 Created`
+
+```json id="agx4o5"
+{
   "id": "8f3a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b",
   "title": "Buy milk",
   "body": "2% from the corner store",
   "createdAt": "2026-05-25T14:30:00.000Z",
   "updatedAt": "2026-05-25T14:30:00.000Z"
 }
-curl:
-bashcurl -X POST http://localhost:3500/notes \
+```
+
+---
+
+### Example cURL
+
+```bash id="e2jlwm"
+curl -X POST http://localhost:8800/notes \
   -H "Content-Type: application/json" \
   -d '{"title":"Buy milk","body":"2% from the corner store"}'
+```
 
-GET /notes — List notes
-Returns notes for the current page, optionally sorted.
-Query parameters (all optional):
-ParamTypeDefaultDescriptionpageint1Page number (1-indexed)limitint10Items per pagesortstring—One of title, newest, lastupdated
-Response — 200 OK — Array of notes for the requested page.
-Error — 400 Bad Request — Invalid sort value.
-json{ "error": "sort must be one of: title, newest, lastupdated" }
-curl examples:
-bash# Default list (page 1, 10 per page)
-curl http://localhost:3500/notes
+---
 
-# Page 2 with 5 per page
-curl "http://localhost:3500/notes?page=2&limit=5"
+# Get Notes
 
-# Newest first
-curl "http://localhost:3500/notes?sort=newest"
+## `GET /notes`
 
-# By title, paginated
-curl "http://localhost:3500/notes?sort=title&page=1&limit=3"
+Returns paginated notes with optional sorting.
 
-GET /notes/:id — Read a single note
-Response — 200 OK — The note object.
-Error — 404 Not Found — If the id doesn't exist.
-curl:
-bashcurl http://localhost:3500/notes/8f3a1b2c-4d5e-6f70-8a9b-0c1d2e3f4a5b
+---
 
-PUT /notes/:id — Replace a note (full update)
-PUT is idempotent — calling it N times with the same payload yields the same result. The original createdAt is preserved; updatedAt is refreshed.
-Request body:
-json{
+## Query Parameters
+
+| Parameter | Type    | Default | Description                      |
+| --------- | ------- | ------- | -------------------------------- |
+| page      | Integer | 1       | Page number                      |
+| limit     | Integer | 10      | Items per page                   |
+| sort      | String  | —       | `title`, `newest`, `lastupdated` |
+
+---
+
+## Example Requests
+
+```bash id="4o6psf"
+# Default list
+curl http://localhost:8800/notes
+
+# Page 2 with 5 items
+curl "http://localhost:8800/notes?page=2&limit=5"
+
+# Sort by newest
+curl "http://localhost:8800/notes?sort=newest"
+
+# Sort by title
+curl "http://localhost:8800/notes?sort=title&page=1&limit=3"
+```
+
+---
+
+## Invalid Sort Response
+
+### `400 Bad Request`
+
+```json id="z2b7ig"
+{
+  "error": "sort must be one of: title, newest, lastupdated"
+}
+```
+
+---
+
+# Get Single Note
+
+## `GET /notes/:id`
+
+Returns a single note.
+
+### Error Response
+
+| Status | Meaning        |
+| ------ | -------------- |
+| 404    | Note not found |
+
+---
+
+### Example cURL
+
+```bash id="oqdh90"
+curl http://localhost:8800/notes/<id>
+```
+
+---
+
+# Replace Note
+
+## `PUT /notes/:id`
+
+Fully replaces a note.
+
+PUT is idempotent — repeating the same request produces the same result.
+
+---
+
+### Request Body
+
+```json id="f2a79r"
+{
   "title": "Updated title",
   "body": "Replaced body content"
 }
-Response — 200 OK — The updated note.
-Error — 404 Not Found — If the id doesn't exist.
-curl:
-bashcurl -X PUT http://localhost:3500/notes/<id> \
+```
+
+---
+
+### Example cURL
+
+```bash id="8gpry6"
+curl -X PUT http://localhost:8800/notes/<id> \
   -H "Content-Type: application/json" \
   -d '{"title":"Updated","body":"New body"}'
+```
 
-PATCH /notes/:id — Partial update
-Only the fields included in the request body are modified. Omitted fields are left untouched.
-Request body (any subset of title, body):
-json{ "title": "Just changing the title" }
-Response — 200 OK — The updated note.
-Error — 404 Not Found — If the id doesn't exist.
-curl:
-bashcurl -X PATCH http://localhost:3500/notes/<id> \
+---
+
+# Partial Update
+
+## `PATCH /notes/:id`
+
+Updates only the provided fields.
+
+### Request Body
+
+```json id="f4pxi2"
+{
+  "title": "Just changing the title"
+}
+```
+
+---
+
+### Example cURL
+
+```bash id="hvw8lm"
+curl -X PATCH http://localhost:8800/notes/<id> \
   -H "Content-Type: application/json" \
   -d '{"title":"Patched title"}'
+```
 
-DELETE /notes/:id — Delete a note
-Response — 204 No Content — Empty body on success.
-Error — 404 Not Found — If the id doesn't exist.
-curl:
-bashcurl -X DELETE http://localhost:3500/notes/<id>
+---
 
-Status Code Reference
-CodeMeaning200OK — successful read or update201Created — successful resource creation204No Content — successful delete (no body)400Bad Request — invalid query parameter404Not Found — resource doesn't exist500Internal Server Error — unhandled exception
+# Delete Note
 
-Design Notes
-PUT vs PATCH
+## `DELETE /notes/:id`
 
-PUT is for full replacement. The client sends the complete representation and the server overwrites the resource. Idempotent: same payload N times → same result.
-PATCH is for partial update. Only the fields present in the request body are changed. Useful for updating one field without re-sending the whole resource.
+Deletes a note.
 
-Both PUT and DELETE are idempotent. POST is not — two identical POSTs create two notes with different ids.
-Why DELETE returns 204
-204 No Content explicitly signals "the action succeeded and there's no body to send." A 200 OK with a "Note deleted" message would be redundant — the client already knows the operation succeeded from the status code.
-In-memory storage
-Notes are stored in a JavaScript array in db/database.js, seeded with sample data on boot. Restarting the server resets state. A persistent database layer is planned for Day 2 of the codeathon.
+### Response
 
-Request Logging
-A custom middleware logs every incoming request to the console:
+`204 No Content`
+
+---
+
+### Example cURL
+
+```bash id="pb3x3i"
+curl -X DELETE http://localhost:8800/notes/<id>
+```
+
+---
+
+# Status Codes
+
+| Code | Meaning                   |
+| ---- | ------------------------- |
+| 200  | Successful read or update |
+| 201  | Resource created          |
+| 204  | Successful delete         |
+| 400  | Invalid request           |
+| 404  | Resource not found        |
+| 500  | Internal server error     |
+
+---
+
+# Design Notes
+
+## PUT vs PATCH
+
+| Method | Purpose          |
+| ------ | ---------------- |
+| PUT    | Full replacement |
+| PATCH  | Partial update   |
+
+PUT and DELETE are idempotent.
+
+POST is not idempotent because each request creates a new resource.
+
+---
+
+## Why DELETE Returns 204
+
+`204 No Content` communicates:
+
+* The operation succeeded
+* No response body is required
+
+Returning `200 OK` with `"Note deleted"` would be redundant.
+
+---
+
+## In-Memory Storage
+
+Notes are stored in a JavaScript array inside:
+
+```txt id="k2ynf7"
+db/database.js
+```
+
+The array is seeded on server startup.
+
+Restarting the server resets all state because persistence is not yet implemented.
+
+A PostgreSQL database layer is planned for Day 2.
+
+---
+
+# Request Logging
+
+Example logs:
+
+```txt id="55r7fp"
 [2026-05-25T14:30:00.000Z] POST /notes 201 4
 [2026-05-25T14:30:05.123Z] GET /notes 200 1
 [2026-05-25T14:30:10.456Z] DELETE /notes/abc-123 204 1
-Format: [ISO timestamp] METHOD url statusCode durationMs
+```
 
-Testing
-Use the curl commands in each endpoint section above, or import them into Postman / Insomnia.
-Screenshots of working requests are in the screenshots/ directory.
+Format:
 
-Author
-Built by Femi Oyetade — IEEE × GCE Codeathon Day 1, Backend Track.
+```txt id="mll31x"
+[ISO timestamp] METHOD URL STATUS_CODE durationMs
+```
+
+---
+
+# Testing
+
+You can test the API using:
+
+* curl
+* Postman
+* Insomnia
+* Thunder Client
+
+Screenshots of successful requests are available in the `screenshots/` directory.
+
+---
+
+# Future Improvements
+
+* PostgreSQL persistence
+* Authentication and authorization
+* JWT-protected routes
+* Database-backed pagination
+* Automated testing
+* Docker support
+
+---
+
+# Author
+
+Built by **Femi Oyetade**
+
+IEEE × GitHub Campus Experts Codeathon — Backend Track
